@@ -1,0 +1,11 @@
+# Build output and local tooling
+dist/
+node_modules/
+
+# Live-preview artifacts produced by agent/pi-plugins/tools/real-panel-server.mjs
+*.preview-copy/
+.preview-server.log
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db

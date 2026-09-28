@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "id": "com.github.yy568821795-max.session-recorder",
+  "name": "Session Recorder",
+  "version": "0.3.0",
+  "description": "本地会话记录器：把每次对话与工具调用增量归档为按会话分文件的 JSONL，标注缺失与截断，并导出 JSONL / Markdown。数据只留在本机。",
+  "changelog": "0.3.0：上架准备——插件 id 定为 com.github.yy568821795-max.session-recorder（官方要求反向域名式；local.* 只是私人插件约定）；engines.piDesktop 收紧为 >=0.14.6（会话读取依赖的 desktop control plane 自 0.14.6 起提供）；仓库布局改为 plugin/（发布目录）+ dev/（测试与预览），发布包不再包含测试；补齐 LICENSE 与 README。0.2.3：把真实会话里剩下的几种包装也解开——嵌套信封（content 里又是一层 content[]）、正文放在 content 字符串里的结果（如 Read 的文件内容）、以及被上限切断在“半个 token”处的 JSON（截断处会丢弃半截尾巴后再解析）；截断位置仍直接标在正文里。0.2.2：修掉超长工具行仍显示转义大块的问题——字段超过字符上限被截断后 JSON 不再合法，正文解码会重新闭合被截断的文档，显示可读输出，并把截断位置留在正文末尾；「原始 JSON」仍可展开核对。0.2.1：修正消息正文的解码缺口——工具行把信封存在 content（甚至是 JSON 字符串）时，正文不再显示转义的一大坨，而是解析出的可读输出；参数与「原始 JSON」仍可展开。0.2.0：面板重做——工具输出解码为可读文本（原始 JSON 仍可展开），新增模型/脱敏/截断等状态标签、正文折叠、骨架与错误状态、按标题或 ID 筛选；设置项改为中文；样式全部对齐宿主设计令牌。0.1.0：首个本地版本。",
+  "author": "yy568821795-max",
+  "homepage": "https://github.com/yy568821795-max/pi-session-recorder",
+  "repository": "https://github.com/yy568821795-max/pi-session-recorder",
+  "categories": ["productivity", "developer-tools", "community"],
+  "main": "main.js",
+  "i18n": {
+    "en": {
+      "name": "Session Recorder",
+      "description": "Local session recorder: archiving every conversation and tool call into per-session JSONL files, marking gaps and truncation, and exporting JSONL or Markdown. Data stays on this device.",
+      "safetyNotes": "Reads conversation records through the host reviewed desktop catalog (session/list, session/get) and writes only inside this plugin's own data directory. No network requests, no telemetry, no direct writes to the host database or transcript files. Content may contain source code or personal data, so secret-shaped keys are redacted by default and the archive can be deleted at any time."
+    },
+    "zh-CN": {
+      "name": "会话记录器",
+      "description": "本地会话记录器：把每次对话与工具调用增量归档为按会话分文件的 JSONL，标注缺失与截断，并导出 JSONL 或 Markdown。",
+      "safetyNotes": "通过宿主已审查的桌面操作目录（session/list、session/get）读取会话记录，并且只在本插件自己的数据目录内写入。不联网、不上报，也不直接改写宿主数据库或会话文件。记录可能包含源码或个人信息，因此默认脱敏疑似密钥的字段，且归档可随时删除。"
+    }
+  },
+  "ui": {
+    "panel": "renderer/index.html",
+    "width": 1180,
+    "height": 820,
+    "title": {
+      "en": "Session Recorder",
+      "zh-CN": "会话记录器"
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "id": "session-recorder.open",
+        "title": "会话记录器：打开",
+        "keywords": ["session", "recorder", "log", "archive", "会话", "记录", "归档", "导出"],
+        "category": "Developer Tools"
+      }
+    ],
+    "agentTools": [
+      {
+        "name": "session_archive_query",
+        "description": "Search this device's locally archived conversations and return matching session metadata plus bounded message excerpts.",
+        "risk": "low",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "query": { "type": "string", "description": "Case-insensitive text to look for. Empty lists the newest sessions." },
+            "sessionId": { "type": "string", "description": "Restrict to one session id." },
+            "limit": { "type": "number", "description": "Maximum sessions to return (default 10, max 50)." },
+            "excerptChars": { "type": "number", "description": "Maximum characters of matched text per hit (default 240, max 2000)." }
+          }
+        }
+      }
+    ],
+    "services": [
+      {
+        "id": "sync",
+        "label": "Session archive sync"
+      }
+    ],
+    "settings": [
+      {
+        "key": "autoSync",
+        "type": "boolean",
+        "default": true,
+        "title": "自动同步",
+        "description": "插件运行时在后台按下面的间隔归档会话。关闭后只能手动点「立即同步」。"
+      },
+      {
+        "key": "redactSecrets",
+        "type": "boolean",
+        "default": true,
+        "title": "脱敏疑似密钥",
+        "description": "落盘前掩码 token、key、password、authorization、cookie、credential 等字段，以及 Bearer、JWT、连接串里的凭据。关闭后原文写入，不建议。"
+      },
+      {
+        "key": "includeToolPayloads",
+        "type": "boolean",
+        "default": true,
+        "title": "记录工具参数与结果",
+        "description": "关闭后只记录工具名、状态和耗时，归档体积会明显变小。"
+      },
+      {
+        "key": "intervalMinutes",
+        "type": "number",
+        "default": 5,
+        "title": "后台同步间隔（分钟）",
+        "description": "允许 1–240。间隔越短越及时，磁盘写入也越频繁。"
+      },
+      {
+        "key": "pageSize",
+        "type": "number",
+        "default": 200,
+        "title": "每次读取条数",
+        "description": "单次向宿主请求的消息条数，允许 1–500（宿主自身的上限就是 500）。"
+      },
+      {
+        "key": "maxMessagesPerSession",
+        "type": "number",
+        "default": 20000,
+        "title": "单会话消息上限",
+        "description": "超出后丢弃最旧的消息，并在归档里留下 dropped-oldest 缺口记录。"
+      },
+      {
+        "key": "maxContentChars",
+        "type": "number",
+        "default": 20000,
+        "title": "单个文本字段上限（字符）",
+        "description": "超长内容会被截断，同时记录原始长度，面板里以「截断」标记显示。"
+      },
+      {
+        "key": "maxArchiveMb",
+        "type": "number",
+        "default": 512,
+        "title": "归档体积预算（MB）",
+        "description": "软预算。超出后只在面板提示，不会自动删除任何文件。"
+      }
+    ]
+  },
+  "permissions": [
+    "ui.panel",
+    "desktop.control",
+    "background.service",
+    "agent.tool.register"
+  ],
+  "engines": {
+    "piDesktop": ">=0.14.6"
+  },
+  "activationEvents": [
+    "onCommand:session-recorder.open",
+    "onStartup"
+  ]
+}

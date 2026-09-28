@@ -1,0 +1,18 @@
+{
+  "name": "pi-session-recorder",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Development repository for the PI-Desktop plugin 'Session Recorder'. The shippable plugin lives in plugin/ (that directory is what gets packaged and what 'Load dev plugin' must point at).",
+  "plugin": "plugin",
+  "scripts": {
+    "test": "node dev/build-preview.mjs --check && node --test dev/recorder-core.test.mjs dev/sync-engine.test.mjs dev/plugin-load.test.mjs dev/panel-render.test.mjs",
+    "preview": "node dev/build-preview.mjs",
+    "test:core": "node --test dev/recorder-core.test.mjs dev/sync-engine.test.mjs",
+    "test:plugin": "node --test dev/plugin-load.test.mjs",
+    "test:panel": "node --test dev/panel-render.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

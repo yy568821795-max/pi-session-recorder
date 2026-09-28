@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="pi-plugin-chrome" content="v2" />
+    <title>会话记录器</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <header class="topbar" id="topbar">
+      <div class="topbar__id">
+        <h1 class="topbar__title">会话记录器</h1>
+        <dl class="readout" id="readout">
+          <div class="readout__cell"><dt>会话</dt><dd id="statSessions">—</dd></div>
+          <div class="readout__cell"><dt>消息</dt><dd id="statMessages">—</dd></div>
+          <div class="readout__cell"><dt>占用</dt><dd id="statBytes">—</dd></div>
+        </dl>
+      </div>
+      <div class="topbar__actions">
+        <div class="search">
+          <input
+            id="search"
+            type="search"
+            placeholder="筛选会话标题或 ID"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="筛选已归档会话"
+          />
+        </div>
+        <button id="sync" class="btn btn--primary" type="button">立即同步</button>
+        <button id="reload" class="btn" type="button">刷新</button>
+      </div>
+    </header>
+
+    <p class="status" id="status" role="status" aria-live="polite" hidden></p>
+
+    <main class="panes">
+      <section class="pane pane--list" aria-label="已归档会话">
+        <div class="pane__head">
+          <span id="listCount" class="pane__count">—</span>
+          <span id="storage" class="pane__meta">—</span>
+        </div>
+        <ul class="rows" id="sessions"></ul>
+      </section>
+
+      <section class="pane pane--detail" aria-label="会话内容">
+        <div class="blank" id="blank">
+          <p class="blank__title">未选择会话</p>
+          <p class="blank__hint">左侧列出本机已归档的会话。点击任意一条查看完整对话、工具调用与导出入口。</p>
+          <p class="blank__hint" id="blankHint"></p>
+        </div>
+
+        <article id="detail" class="detail" hidden>
+          <header class="detail__head">
+            <div class="detail__id">
+              <h2 class="detail__title" id="detailTitle"></h2>
+              <div class="chips" id="detailChips"></div>
+            </div>
+            <div class="detail__actions">
+              <button id="exportMd" class="btn btn--sm" type="button">导出 Markdown</button>
+              <button id="exportJsonl" class="btn btn--sm" type="button">导出 JSONL</button>
+              <button id="exportBoth" class="btn btn--sm" type="button">两种格式</button>
+              <span class="rule" aria-hidden="true"></span>
+              <button id="delete" class="btn btn--sm btn--danger" type="button">删除本地归档</button>
+            </div>
+          </header>
+
+          <p class="notice" id="detailGaps" hidden></p>
+          <ol class="messages" id="messages"></ol>
+          <p class="detail__foot" id="detailFooter"></p>
+        </article>
+      </section>
+    </main>
+
+    <details class="devlog">
+      <summary>记录器日志</summary>
+      <pre id="log"></pre>
+    </details>
+
+    <script src="panel.js"></script>
+  </body>
+</html>
