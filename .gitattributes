@@ -1,0 +1,9 @@
+# Keep checked-out text as LF everywhere: the plugin center rebuilds the package
+# from the pinned commit, so line endings must not depend on the platform.
+* text=auto eol=lf
+
+# Never touch binary artifacts.
+*.piplug binary
+*.png binary
+*.ico binary
+*.woff2 binary
